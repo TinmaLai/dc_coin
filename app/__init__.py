@@ -1,12 +1,12 @@
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
-from config import Config
+from config import BaseConfig
 
 db = SQLAlchemy()
 
-def create_app():
+def create_app(config_class=BaseConfig):
     app = Flask(__name__)
-    app.config.from_object(Config)
+    app.config.from_object(config_class)
     
     # Initialize extensions
     db.init_app(app)

@@ -1,7 +1,7 @@
 import asyncio
 from telegram import Bot
 from telegram.error import TelegramError
-from config import Config
+from config import BaseConfig
 import logging
 
 logging.basicConfig(level=logging.INFO)
@@ -10,9 +10,9 @@ logger = logging.getLogger(__name__)
 class TelegramService:
     def __init__(self):
         try:
-            logger.info(f"Config bot tokennnn: {Config.TELEGRAM_BOT_TOKEN}")
-            self.bot = Bot(token=Config.TELEGRAM_BOT_TOKEN)
-            self.chat_id = Config.TELEGRAM_CHAT_ID
+            logger.info(f"BaseConfig bot tokennnn: {BaseConfig.TELEGRAM_BOT_TOKEN}")
+            self.bot = Bot(token=BaseConfig.TELEGRAM_BOT_TOKEN)
+            self.chat_id = BaseConfig.TELEGRAM_CHAT_ID
             logger.info(f"Telegram bot initialized with chat_id: {self.chat_id}")
         except Exception as e:
             logger.error(f"Error initializing Telegram bot: {e}")
@@ -40,44 +40,51 @@ class TelegramService:
             logger.error(f"Unexpected error sending message: {e}")
             return False
 
-    def send_batch_notification(self, message):
+    def send_batch_notification(self, notifications):
         """Send batch notification with multiple patterns"""
         try:
-            if not message.strip():
-                logger.warning("Empty message, skipping notification")
+            if not notifications:
+                logger.warning("Empty notifications list, skipping batch")
                 return False
                 
-            logger.info("Sending batch notification")
-            return asyncio.run(self.send_message(message))
+            # Sort by confidence and get top 5
+            notifications.sort(key=lambda x: x[1]['confidence'], reverse=True)
+            notifications = notifications[:5]
+                
+            logger.info("Sending batch notification for top 5 patterns")
+            summary = "🏆 TOP 5 Pattern phát hiện:\n"
+            for symbol, pattern in notifications:
+                emoji = self.get_pattern_emoji(pattern['pattern_type'])
+                summary += f"{emoji} <b>{symbol}</b> - {pattern['pattern_type'].replace('_', ' ').title()} - {pattern['confidence']*100:.1f}%\n"
+            
+            return asyncio.run(self.send_message(summary))
         except Exception as e:
             logger.error(f"Error in batch notification: {e}")
             return False
 
+    def get_pattern_emoji(self, pattern_type):
+        """Get emoji for pattern type"""
+        emoji_map = {
+            'head_and_shoulders': '👥',
+            'double_top': '🔝',
+            'double_bottom': '⬇️',
+            'symmetric_triangle': '◀️▶️',
+            'ascending_triangle': '📈',
+            'descending_triangle': '📉',
+            'triple_top': '⚠️',
+            'triple_bottom': '✅',
+            'rising_wedge': '📐',
+            'falling_wedge': '📏',
+            'bull_flag': '🚩',
+            'bear_flag': '⛳'
+        }
+        return emoji_map.get(pattern_type, '📊')
+
     def format_pattern_message(self, symbol, pattern, current_price):
         """Format pattern detection message"""
         try:
-            emoji_map = {
-                'head_and_shoulders': '👥',
-                'double_top': '🔝',
-                'double_bottom': '⬇️',
-                'symmetric_triangle': '◀️▶️',
-                'ascending_triangle': '📈',
-                'descending_triangle': '📉'
-            }
-            
-            emoji = emoji_map.get(pattern['pattern_type'], '📊')
-            
-            message = (
-                f"{emoji} <b>Phát hiện mô hình!</b>\n\n"
-                f"<b>Mã:</b> {symbol}\n"
-                f"<b>Mô hình:</b> {pattern['pattern_type'].replace('_', ' ').title()}\n"
-                f"<b>Giá hiện tại:</b> {current_price:,.2f} USDT\n"
-                f"<b>Độ tin cậy:</b> {pattern['confidence']*100:.1f}%\n"
-                f"<b>Chi tiết:</b> {pattern['description']}\n\n"
-                f"<i>⚠️ Lưu ý: Đây chỉ là phân tích kỹ thuật tự động, "
-                f"không phải là khuyến nghị đầu tư.</i>"
-            )
-            
+            emoji = self.get_pattern_emoji(pattern['pattern_type'])
+            message = f"{emoji} <b>{symbol}</b> - {pattern['pattern_type'].replace('_', ' ').title()} - {pattern['confidence']*100:.1f}%"
             return message
         except Exception as e:
             logger.error(f"Error formatting message: {e}")

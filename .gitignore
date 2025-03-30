@@ -1,0 +1,38 @@
+# Python
+*.py[cod]
+*$py.class
+__pycache__/
+*.so
+
+# Distribution / packaging
+dist/
+build/
+*.egg-info/
+
+# Virtual environment
+venv/
+env/
+.env
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Local configuration
+*.local
+.env.local
+instance/
+*.db
+
+# Logs
+*.log
+logs/
+
+# Test coverage
+.coverage
+htmlcov/
+
+# Render specific
+.render-buildpacks.json

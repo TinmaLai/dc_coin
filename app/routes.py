@@ -31,25 +31,25 @@ def scan_patterns(app):
                 symbols = binance_service.get_top_symbols()
                 logger.info(f"Analyzing {len(symbols)} symbols")
                 
-                # Initialize notification message
+                # Initialize notifications list
                 notifications = []
                 
                 for symbol in symbols:
-                    # Get historical data
-                    df = binance_service.get_klines(symbol)
-                    if df is None:
-                        continue
+                    try:
+                        # Get historical data
+                        df = binance_service.get_klines(symbol)
+                        if df is None:
+                            continue
+                            
+                        # Add technical indicators
+                        df = binance_service.add_technical_indicators(df)
                         
-                    # Add technical indicators
-                    df = binance_service.add_technical_indicators(df)
-                    
-                    # Analyze patterns
-                    patterns = pattern_analyzer.analyze_all_patterns(df)
-                    current_price = binance_service.get_current_price(symbol)
-                    
-                    if patterns and current_price:
-                        for pattern in patterns:
-                            try:
+                        # Analyze patterns
+                        patterns = pattern_analyzer.analyze_all_patterns(df)
+                        current_price = binance_service.get_current_price(symbol)
+                        
+                        if patterns and current_price:
+                            for pattern in patterns:
                                 # Check for existing pattern
                                 cutoff = datetime.utcnow() - timedelta(hours=1)
                                 existing = Pattern.query.filter(
@@ -70,33 +70,25 @@ def scan_patterns(app):
                                     db.session.add(db_pattern)
                                     logger.info(f"New pattern detected: {symbol} - {pattern['pattern_type']}")
                                     
-                                    # Collect notification
-                                    notifications.append({
-                                        'symbol': symbol,
-                                        'pattern': pattern,
-                                        'price': current_price
-                                    })
+                                    # Add to notifications list
+                                    notifications.append((symbol, pattern))
                                     
-                            except Exception as e:
-                                logger.error(f"Error saving pattern: {e}")
-                                db.session.rollback()
-                                
-                # Commit all changes
-                db.session.commit()
-                logger.info(f"Found {len(notifications)} new patterns")
+                    except Exception as e:
+                        logger.error(f"Error processing symbol {symbol}: {e}")
+                        continue
                 
-                # Send batch notification if any new patterns found
-                if notifications:
-                    summary = "🔔 Cập nhật mô hình giá (5 phút gần nhất)\n\n"
-                    for notif in notifications:
-                        pattern = notif['pattern']
-                        summary += f"💠 {notif['symbol']}\n"
-                        summary += f"📊 Mô hình: {pattern['pattern_type'].replace('_', ' ').title()}\n"
-                        summary += f"💰 Giá: {notif['price']:,.2f} USDT\n"
-                        summary += f"📈 Độ tin cậy: {pattern['confidence']*100:.1f}%\n"
-                        summary += f"ℹ️ {pattern['description']}\n\n"
+                try:
+                    # Commit all changes
+                    db.session.commit()
+                    logger.info(f"Found {len(notifications)} new patterns")
                     
-                    telegram_service.send_batch_notification(summary)
+                    # Send batch notification for top 5 patterns if any found
+                    if notifications:
+                        logger.info(f"Sending top 5 patterns out of {len(notifications)} detected patterns")
+                        telegram_service.send_batch_notification(notifications)
+                except Exception as e:
+                    logger.error(f"Error committing changes: {e}")
+                    db.session.rollback()
                 
             except Exception as e:
                 logger.error(f"Error in pattern scanning: {e}")

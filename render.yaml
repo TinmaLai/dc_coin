@@ -1,0 +1,27 @@
+services:
+  - type: web
+    name: crypto-scanner
+    env: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn run:app
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.0
+      - key: FLASK_ENV
+        value: production
+      - key: FLASK_APP
+        value: run.py
+      - key: SQLALCHEMY_DATABASE_URI
+        value: sqlite:////opt/render/project/data/crypto_scanner.db
+      - key: BINANCE_API_KEY
+        sync: false
+      - key: BINANCE_API_SECRET
+        sync: false
+      - key: TELEGRAM_BOT_TOKEN
+        sync: false
+      - key: TELEGRAM_CHAT_ID
+        sync: false
+    disk:
+      name: data
+      mountPath: /opt/render/project/data
+      sizeGB: 1
