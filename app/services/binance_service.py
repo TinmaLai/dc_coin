@@ -3,11 +3,11 @@ from binance.exceptions import BinanceAPIException
 from datetime import datetime
 import pandas as pd
 import pandas_ta as ta
-from config import Config
+from config import BaseConfig
 
 class BinanceService:
     def __init__(self):
-        self.client = Client(Config.BINANCE_API_KEY, Config.BINANCE_API_SECRET)
+        self.client = Client(BaseConfig.BINANCE_API_KEY, BaseConfig.BINANCE_API_SECRET)
         
     def get_top_symbols(self, limit=100, quote_asset='USDT'):
         """Get top trading pairs by 24h volume"""
