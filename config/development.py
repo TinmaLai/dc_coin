@@ -10,7 +10,7 @@ class DevelopmentConfig(BaseConfig):
     EXPLAIN_TEMPLATE_LOADING = True
     
     # Development database
-    SQLALCHEMY_DATABASE_URI = 'sqlite:///crypto_scanner.db'
+    SQLALCHEMY_DATABASE_URI = 'sqlite:///app.db'
     
     # Verbose logging
     LOGGING_LEVEL = 'DEBUG'

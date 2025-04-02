@@ -19,7 +19,7 @@ def create_app(config_class=BaseConfig):
         init_routes(app)
         
         # Create database tables
-        db.create_all()
+        # db.create_all()  # Disabled - Using migrations instead
         
         # Register blueprints if any
         # app.register_blueprint(...)

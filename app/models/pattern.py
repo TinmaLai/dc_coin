@@ -13,6 +13,18 @@ class Pattern(db.Model):
     timestamp = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
     description = db.Column(db.Text)
     
+    # Retest information
+    retest_status = db.Column(db.String(20), nullable=False, default='none')  # none, pending, confirmed, failed
+    retest_price = db.Column(db.Float)
+    retest_timestamp = db.Column(db.DateTime)
+    retest_description = db.Column(db.Text)
+    
+    # Price levels
+    entry_price = db.Column(db.Float)
+    take_profit = db.Column(db.Float)
+    stop_loss = db.Column(db.Float)
+    risk_reward_ratio = db.Column(db.Float)
+    
     # Unique constraint to prevent duplicates within time window
     __table_args__ = (
         db.UniqueConstraint('symbol', 'pattern_type', 'timestamp', 
@@ -30,7 +42,15 @@ class Pattern(db.Model):
             'price': self.price,
             'confidence': self.confidence,
             'timestamp': self.timestamp.isoformat(),
-            'description': self.description
+            'description': self.description,
+            'entry_price': self.entry_price,
+            'take_profit': self.take_profit,
+            'stop_loss': self.stop_loss,
+            'risk_reward_ratio': self.risk_reward_ratio,
+            'retest_status': self.retest_status,
+            'retest_price': self.retest_price,
+            'retest_timestamp': self.retest_timestamp.isoformat() if self.retest_timestamp else None,
+            'retest_description': self.retest_description
         }
 
     @staticmethod

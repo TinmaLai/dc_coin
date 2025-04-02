@@ -91,6 +91,7 @@
             </div>
         </div>
 
+
         <!-- Charts Section -->
         <div class="row g-4 mb-4">
             <div class="col-12 col-xl-8">
@@ -134,10 +135,25 @@
                             <div class="d-flex gap-2">
                                 <select class="form-select form-select-sm bg-dark text-light border-warning" id="pattern-filter">
                                     <option value="">Tất cả mô hình</option>
-                                    <option value="head_and_shoulders">Head & Shoulders</option>
-                                    <option value="double_top">Double Top</option>
-                                    <option value="double_bottom">Double Bottom</option>
-                                    <option value="triangle">Triangle</option>
+                                    <option value="head_and_shoulders">Vai-Đầu-Vai</option>
+                                    <option value="double_top">Hai Đỉnh</option>
+                                    <option value="double_bottom">Hai Đáy</option>
+                                    <option value="triple_top">Ba Đỉnh</option>
+                                    <option value="triple_bottom">Ba Đáy</option>
+                                    <option value="symmetric_triangle">Tam Giác Cân</option>
+                                    <option value="ascending_triangle">Tam Giác Tăng</option>
+                                    <option value="descending_triangle">Tam Giác Giảm</option>
+                                    <option value="rising_wedge">Nêm Tăng</option>
+                                    <option value="falling_wedge">Nêm Giảm</option>
+                                    <option value="bull_flag">Cờ Tăng</option>
+                                    <option value="bear_flag">Cờ Giảm</option>
+                                </select>
+                                <select class="form-select form-select-sm bg-dark text-light border-warning" id="retest-filter">
+                                    <option value="">Tất cả trạng thái retest</option>
+                                    <option value="confirmed">Đã retest thành công</option>
+                                    <option value="pending">Đang chờ retest</option>
+                                    <option value="failed">Retest thất bại</option>
+                                    <option value="none">Chưa retest</option>
                                 </select>
                                 <input type="text" class="form-control form-control-sm bg-dark text-light border-warning" 
                                        placeholder="Tìm kiếm..." id="search-input">
@@ -154,6 +170,7 @@
                                         <th>Mô hình</th>
                                         <th>Giá</th>
                                         <th>Độ tin cậy</th>
+                                        <th>Retest</th>
                                         <th>Chi tiết</th>
                                     </tr>
                                 </thead>
@@ -189,6 +206,9 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/apexcharts@3.48.0/dist/apexcharts.min.js"></script>
+    <!-- Custom JS -->
+    <script src="{{ url_for('static', filename='js/pattern-overlay.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/price-levels.js') }}"></script>
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>
 </body>
 </html>

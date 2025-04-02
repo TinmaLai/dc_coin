@@ -1,6 +1,7 @@
 import asyncio
 from telegram import Bot
 from telegram.error import TelegramError
+from telegram.request import HTTPXRequest
 from config import BaseConfig
 import logging
 
@@ -11,7 +12,14 @@ class TelegramService:
     def __init__(self):
         try:
             logger.info(f"BaseConfig bot tokennnn: {BaseConfig.TELEGRAM_BOT_TOKEN}")
-            self.bot = Bot(token=BaseConfig.TELEGRAM_BOT_TOKEN)
+            # Configure connection pool
+            request = HTTPXRequest(
+                connection_pool_size=8,
+                connect_timeout=20.0,
+                read_timeout=20.0,
+                pool_timeout=3.0
+            )
+            self.bot = Bot(token=BaseConfig.TELEGRAM_BOT_TOKEN, request=request)
             self.chat_id = BaseConfig.TELEGRAM_CHAT_ID
             logger.info(f"Telegram bot initialized with chat_id: {self.chat_id}")
         except Exception as e:
@@ -52,10 +60,30 @@ class TelegramService:
             notifications = notifications[:5]
                 
             logger.info("Sending batch notification for top 5 patterns")
-            summary = "🏆 TOP 5 Pattern phát hiện:\n"
+            summary = "🏆 TOP 5 PATTERN PHÁT HIỆN:\n\n"
             for symbol, pattern in notifications:
                 emoji = self.get_pattern_emoji(pattern['pattern_type'])
-                summary += f"{emoji} <b>{symbol}</b> - {pattern['pattern_type'].replace('_', ' ').title()} - {pattern['confidence']*100:.1f}%\n"
+                is_bullish = pattern['take_profit'] > pattern['entry_price'] if pattern.get('take_profit') else None
+                
+                summary += (
+                    f"{emoji} <b>{symbol}</b>\n"
+                    f"Mẫu hình: {pattern['pattern_type'].replace('_', ' ').title()}\n"
+                    f"Độ tin cậy: {pattern['confidence']*100:.1f}%\n"
+                )
+                
+                if pattern.get('entry_price'):
+                    tp_percent = abs((pattern['take_profit'] - pattern['entry_price']) / pattern['entry_price'] * 100)
+                    sl_percent = abs((pattern['stop_loss'] - pattern['entry_price']) / pattern['entry_price'] * 100)
+                    
+                    summary += (
+                        f"{"🟢" if is_bullish else "🔴"} Tín hiệu: {'LONG' if is_bullish else 'SHORT'}\n"
+                        f"📍 Entry: {pattern['entry_price']:.2f}\n"
+                        f"🎯 TP: {pattern['take_profit']:.2f} ({tp_percent:.1f}%)\n"
+                        f"🛑 SL: {pattern['stop_loss']:.2f} ({sl_percent:.1f}%)\n"
+                        f"📊 R/R: {pattern['risk_reward_ratio']}\n"
+                    )
+                
+                summary += "\n"
             
             return asyncio.run(self.send_message(summary))
         except Exception as e:

@@ -9,15 +9,19 @@ class BinanceService:
     def __init__(self):
         self.client = Client(BaseConfig.BINANCE_API_KEY, BaseConfig.BINANCE_API_SECRET)
         
-    def get_top_symbols(self, limit=100, quote_asset='USDT'):
-        """Get top trading pairs by 24h volume"""
+    def get_top_symbols(self, limit=100, quote_asset='USDT', min_volume=50_000_000):
+        """Get top trading pairs by 24h volume with minimum volume threshold"""
         try:
             tickers = self.client.get_ticker()
             df = pd.DataFrame(tickers)
             # Filter USDT pairs and sort by volume
             df = df[df['symbol'].str.endswith(quote_asset)]
+            # Convert volume and quote volume to float
             df['volume'] = df['volume'].astype(float)
-            df = df.sort_values('volume', ascending=False)
+            df['quoteVolume'] = df['quoteVolume'].astype(float)
+            # Filter by minimum quote volume (in USDT)
+            df = df[df['quoteVolume'] >= min_volume]
+            df = df.sort_values('quoteVolume', ascending=False)
             return df.head(limit)['symbol'].tolist()
         except BinanceAPIException as e:
             print(f"Error fetching top symbols: {e}")
